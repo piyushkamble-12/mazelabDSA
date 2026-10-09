@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f8f9fc">
+  <meta name="description" content="MazeLab is an interactive DFS maze generator and graph algorithm visualizer with BFS, editable mazes, and playable mode.">
+  <title>MazeLab — Learn graph algorithms visually</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./js/main.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="MazeLab home"><span class="brand-icon" aria-hidden="true">▦</span><span>maze<span class="brand-light">lab</span><small>THE ALGORITHM PLAYGROUND</small></span></a>
+      <div class="topbar-right"><span class="nav-chip"><span class="chip-dot"></span> Runs in your browser</span><span class="version">v2.1 / learning edition</span></div>
+    </header>
+
+    <div class="intro">
+      <div class="eyebrow"><span class="eyebrow-line"></span> INTERACTIVE DATA STRUCTURES LAB</div>
+      <h1>Find a way <em>through.</em></h1>
+      <p>Build a maze. Explore every decision. Compare search strategies and learn what happens inside the stack and queue.</p>
+    </div>
+
+    <main class="workspace">
+      <div class="primary-column">
+        <section class="surface maze-card" id="boardCard" aria-labelledby="mazeTitle">
+          <div class="workspace-header">
+            <div><div class="overline">YOUR WORKSPACE</div><h2 id="mazeTitle">The maze canvas <span class="grid-chip" id="gridLabel">21 × 21</span></h2><p id="workspaceLabel">Creating your first maze…</p></div>
+            <div class="legend" aria-label="Cell colors"><span><i class="swatch start"></i> Start</span><span><i class="swatch end"></i> Finish</span><span><i class="swatch visited"></i> Visited</span><span><i class="swatch path"></i> Path</span></div>
+          </div>
+          <div class="canvas-frame">
+            <canvas id="board" width="760" height="760" role="img" aria-label="Maze visualization. Use Edit mode to change the maze or Play mode and arrow keys to play."></canvas>
+            <span class="canvas-corner" aria-hidden="true">01 / GRID SPACE</span>
+          </div>
+          <div class="quick-controls" aria-label="Quick maze controls">
+            <button id="quickGenerate" class="quick-button" type="button">↻ <span>New maze</span></button>
+            <button id="quickSolve" class="quick-button quick-primary" type="button">▶ <span>Solve</span></button>
+            <button id="quickPause" class="quick-button" type="button" disabled>Ⅱ <span>Pause</span></button>
+            <button id="quickRace" class="quick-button" type="button">⇄ <span>Race</span></button>
+          </div>
+          <div class="playback-panel" aria-label="Trace playback controls">
+            <div class="playback-top"><span class="playback-label">TRACE TIMELINE</span><span id="stepCounter" class="step-counter">No trace yet</span></div>
+            <div class="scrub-row"><button id="backStep" class="icon-control" title="Previous step" aria-label="Previous step" disabled>←</button><input id="timelineSeek" type="range" min="0" max="1" value="0" step="1" disabled aria-label="Seek to animation step"><button id="replay" class="icon-control" title="Replay trace" aria-label="Replay animation" disabled>↻</button></div>
+            <p class="playback-caption">Scrub, rewind, or replay any run. Pauses automatically while seeking.</p>
+          </div>
+          <div class="progress-track" id="progressWrap" role="progressbar" aria-label="Algorithm animation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressBar" class="progress-fill"></div></div>
+          <div class="canvas-footer"><div class="status"><span id="statusDot" class="status-dot" data-tone="ready"></span><div><strong id="boardStatus" role="status" aria-live="polite">Getting ready…</strong><p id="boardDetail">Loading your workspace.</p></div></div><span class="canvas-footer-tip">DFS <span class="tip-separator">/</span> BFS <span class="tip-separator">/</span> BACKTRACKING</span></div>
+        </section>
+
+        <section class="surface inspector" id="inspector" aria-labelledby="inspectorTitle">
+          <div class="inspector-top"><div><span class="overline">INSIDE THE ALGORITHM</span><h2 id="inspectorTitle">Every decision, explained</h2></div><span class="inspector-pill" id="frontierType">STACK / DFS</span></div>
+          <div class="inspector-grid"><div class="frontier-card"><div class="frontier-heading"><strong id="frontierLabel">Stack — last in, first out</strong><span id="frontierCount">0 items</span></div><div id="frontierItems" class="frontier-items" aria-live="off"><span class="frontier-empty">Run a solver to inspect its data structure.</span></div></div><div class="decision-card"><span class="decision-caption">CURRENT STEP</span><h3 id="decisionTitle">Ready to explore</h3><p id="decisionDetail">Start DFS or BFS to see the current cell, what changed, and why.</p><div class="code-line" id="decisionCode">waiting for algorithm…</div></div></div>
+        </section>
+
+        <section class="metrics" aria-label="Algorithm statistics">
+          <article class="metric"><span class="metric-label">CELLS EXPLORED</span><div><strong id="visitedStat">0</strong><span class="metric-symbol" aria-hidden="true">↗</span></div><small>Visited by the search</small></article>
+          <article class="metric"><span class="metric-label">ROUTE LENGTH</span><div><strong id="pathStat">0</strong><span class="metric-symbol" aria-hidden="true">⌁</span></div><small>Moves from start to end</small></article>
+          <article class="metric"><span class="metric-label">BACKTRACKS</span><div><strong id="backtrackStat">0</strong><span class="metric-symbol" aria-hidden="true">↶</span></div><small>Dead ends in DFS</small></article>
+          <article class="metric"><span class="metric-label">COMPUTE TIME</span><div><strong class="metric-time" id="computeStat">0.00 ms</strong><span class="metric-symbol" aria-hidden="true">◷</span></div><small>Excludes visualization</small></article>
+        </section>
+
+        <section id="racePanel" class="surface race-panel" hidden aria-labelledby="raceTitle">
+          <div class="race-heading"><div><span class="overline">THE SAME MAZE. TWO STRATEGIES.</span><h2 id="raceTitle">DFS vs BFS <span class="race-accent">live race</span></h2><p>Both animations advance together, one algorithm event per tick.</p></div><button id="raceClose" class="icon-control" title="Close race" aria-label="Close race">×</button></div>
+          <div class="race-grid">
+            <article class="race-contender"><div class="race-contender-top"><div><span class="race-dot dfs-dot"></span><strong>Depth-first search</strong><small>Stack · explore deeply</small></div><b id="raceDfsVisited">0 cells</b></div><canvas id="raceDfsBoard" width="420" height="420" aria-label="DFS race visualization"></canvas><p id="raceDfsResult">Waiting for the start…</p></article>
+            <article class="race-contender"><div class="race-contender-top"><div><span class="race-dot bfs-dot"></span><strong>Breadth-first search</strong><small>Queue · explore outward</small></div><b id="raceBfsVisited">0 cells</b></div><canvas id="raceBfsBoard" width="420" height="420" aria-label="BFS race visualization"></canvas><p id="raceBfsResult">Waiting for the start…</p></article>
+          </div>
+          <p class="race-note" id="raceNote">Tip: Use a maze with loops to discover where BFS finds shorter routes.</p>
+        </section>
+
+        <section class="explainer surface"><div class="explain-icon">✳</div><div><h3>What you're watching</h3><p>Randomized <strong>DFS generates</strong> the maze by carving corridors and backtracking. The <strong>DFS solver</strong> explores one branch at a time using a stack; <strong>BFS</strong> explores level by level using a queue. BFS guarantees a shortest path in an unweighted maze.</p></div></section>
+      </div>
+
+      <aside class="sidebar" aria-label="Maze controls">
+        <section class="surface settings-panel">
+          <div class="panel-heading"><span class="section-number">01</span><div><h2>Build your maze</h2><p>Change the world</p></div></div>
+          <label class="form-label" for="size">Grid dimensions</label>
+          <div class="select-wrap"><select id="size"><option value="15">Small · 15 × 15</option><option value="21" selected>Medium · 21 × 21</option><option value="31">Large · 31 × 31</option><option value="41">Extra large · 41 × 41</option></select></div>
+          <label class="form-label" for="mazeStyle" style="margin-top:16px">Maze topology</label><div class="select-wrap"><select id="mazeStyle"><option value="loops" selected>Multiple routes · ideal for comparisons</option><option value="perfect">Perfect maze · single possible route</option></select></div>
+          <p class="helper">Extra passages create cycles, so DFS and BFS can find different routes.</p>
+          <div class="toggle-row"><div><strong>Animate generation</strong><small>Watch the DFS carving process</small></div><label class="switch"><input type="checkbox" id="animated" checked><span class="switch-track"></span><span class="sr-only">Animate generation</span></label></div>
+          <button class="action-button dark-button full" id="generate"><span aria-hidden="true">↻</span> Generate new maze</button>
+          <div class="file-actions"><button id="saveMaze" class="action-button outline" type="button">↓ Save maze</button><button id="loadMaze" class="action-button outline" type="button">↑ Load JSON</button></div><input type="file" id="mazeFile" accept="application/json,.json" hidden><p class="helper">Save your design as a portable JSON file. Your maze stays on this device.</p>
+        </section>
+
+        <section class="surface settings-panel">
+          <div class="panel-heading"><span class="section-number">02</span><div><h2>Solve & visualize</h2><p>Watch the logic unfold</p></div></div>
+          <label class="form-label" for="algorithm">Choose an algorithm</label>
+          <div class="select-wrap"><select id="algorithm"><option value="dfs">Depth-first search · DFS</option><option value="bfs">Breadth-first search · BFS</option></select></div>
+          <p class="helper algorithm-helper" id="algorithmDescription">DFS explores one branch at a time using a stack.</p>
+          <div class="speed-label"><label class="form-label" for="speed">Playback speed</label><span id="speedValue" class="speed-value">68%</span></div>
+          <input id="speed" type="range" min="1" max="100" value="68" aria-label="Animation speed"><div class="speed-ends"><span>Slow & detailed</span><span>Fast & fluid</span></div>
+          <button class="action-button accent-button full solve-button" id="solve"><span aria-hidden="true">▶</span> Visualize solver <span class="button-arrow" aria-hidden="true">↗</span></button>
+          <div class="transport"><button class="action-button outline" id="pause" disabled aria-label="Pause animation">Ⅱ Pause</button><button class="action-button outline" id="step" disabled title="Pause first to enable single-step">→ Step</button><button class="action-button outline" id="reset">↺ Clear trail</button></div>
+          <button class="action-button skip-button" id="skip" hidden>Skip to completed maze →</button>
+          <button class="action-button compare-button full" id="compare"><span aria-hidden="true">⇄</span> Race DFS vs BFS</button>
+        </section>
+
+        <section class="surface settings-panel">
+          <div class="panel-heading"><span class="section-number">03</span><div><h2>Explore your way</h2><p>Three ways to interact</p></div></div>
+          <div class="mode-switch" role="group" aria-label="Interaction mode"><button class="selected" aria-pressed="true" data-mode="view">◉ View</button><button aria-pressed="false" data-mode="edit">✎ Edit</button><button aria-pressed="false" data-mode="play">▷ Play</button></div>
+          <div class="edit-history"><button id="undoEdit" class="action-button outline" disabled type="button">↶ Undo edit</button><button id="redoEdit" class="action-button outline" disabled type="button">↷ Redo edit</button></div>
+          <p id="modeHint" class="helper mode-helper">Inspect the maze, then watch an algorithm explore it.</p>
+          <div id="brushTools" hidden><label class="form-label" for="brush">Draw on the maze</label><div class="select-wrap"><select id="brush"><option value="wall">✎ Paint wall</option><option value="erase">◇ Erase wall</option><option value="start">● Move start</option><option value="end">◆ Move finish</option></select></div><p class="helper">Click or drag cells on the canvas to edit.</p></div>
+          <div id="playTools" hidden><div class="play-head"><span><strong>Steps taken: </strong><b id="playerSteps">0</b></span><button id="restart" class="text-button">Restart ↺</button></div><div class="dpad" aria-label="Touch movement controls"><button data-move="up" aria-label="Move up">↑</button><div><button data-move="left" aria-label="Move left">←</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div></div></div>
+        </section>
+
+        <section class="surface result-panel" id="comparison" hidden><div class="compare-head"><h2>Head to head <span>DFS vs BFS</span></h2><button id="clearComparison" aria-label="Close comparison" title="Close comparison">×</button></div><table><thead><tr><th>METRIC</th><th>DFS</th><th>BFS</th></tr></thead><tbody><tr><td>Cells explored</td><td id="dfsExplored">—</td><td id="bfsExplored">—</td></tr><tr><td>Route steps</td><td id="dfsPath">—</td><td id="bfsPath">—</td></tr><tr><td>Compute time</td><td id="dfsTime">—</td><td id="bfsTime">—</td></tr></tbody></table><p id="comparisonInsight" class="comparison-insight"></p></section>
+      </aside>
+    </main>
+
+    <section class="help-section"><button id="helpToggle" aria-expanded="false" aria-controls="helpContent" class="help-toggle">How does this project work? <span aria-hidden="true">＋</span></button><div id="helpContent" hidden><div class="help-grid"><div><h3>01. Generate</h3><p>Randomized DFS carves a maze by jumping between cells. A stack remembers the path while the algorithm backtracks at dead ends.</p></div><div><h3>02. Solve</h3><p>DFS searches deeply with a stack. BFS uses a queue to search by distance. Both record predecessors to reconstruct a valid path.</p></div><div><h3>03. Experiment</h3><p>Paint new passages and walls to make loops or unreachable areas. Compare algorithms, or play the maze yourself.</p></div></div></div></section>
+    <footer class="footer"><span>MAZELAB <span class="footer-dot">✳</span> A DATA STRUCTURES MINI PROJECT</span><span>Vanilla JavaScript · Accessible controls · Modular by design</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
